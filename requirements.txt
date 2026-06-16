@@ -1,0 +1,17 @@
+# Sports A2A — Python dependencies
+
+# Agent Framework packages (released v1.0)
+agent-framework-a2a
+agent-framework-foundry
+
+# Azure authentication
+azure-identity
+
+# A2A server runtime
+uvicorn
+
+# HTTP client for A2A communication
+httpx
+
+# Environment variable loading
+python-dotenv
