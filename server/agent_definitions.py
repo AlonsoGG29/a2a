@@ -1,5 +1,4 @@
-# Copyright (c) Microsoft. All rights reserved.
-# Agent definitions and AgentCard factories for the Sports A2A server
+# Definiciones de agentes y AgentCards para el servidor A2A de deportes
 
 from __future__ import annotations
 
@@ -15,72 +14,75 @@ from sports_data import (
 )
 
 # ---------------------------------------------------------------------------
-# Agent instructions
+# Instrucciones de los agentes
 # ---------------------------------------------------------------------------
 
 RESULTS_INSTRUCTIONS = """\
-You are a sports results expert specializing in recent match results and standings.
-You cover football (soccer), Formula 1, basketball, and tennis.
+Eres un experto en resultados deportivos especializado en resultados recientes y clasificaciones.
+Cubres fútbol, Fórmula 1, baloncesto y tenis.
 
-Use your tools to look up:
-- Live scores and recent match results
-- League standings and championship tables
-- Formula 1 driver and constructor standings
+Usa tus herramientas para consultar:
+- Marcadores en vivo y resultados recientes de partidos
+- Clasificaciones de ligas y campeonatos
+- Clasificación de pilotos y constructores de Fórmula 1
 
-Always present results clearly with scores, dates, and relevant context.
-If asked about a sport or league you don't have data for, say so honestly.
+Presenta siempre los resultados de forma clara con marcadores, fechas y contexto relevante.
+Si te preguntan por un deporte o liga para el que no tienes datos, indícalo con honestidad.
+Responde siempre en español.
 """
 
 STATS_INSTRUCTIONS = """\
-You are a sports statistics analyst with deep knowledge of player and team performance.
-You cover football (soccer), Formula 1, basketball, and tennis.
+Eres un analista de estadísticas deportivas con amplio conocimiento del rendimiento de jugadores y equipos.
+Cubres fútbol, Fórmula 1, baloncesto y tenis.
 
-Use your tools to provide:
-- Detailed player statistics (goals, assists, rating, etc.)
-- Team performance metrics (wins, losses, goals scored/conceded, etc.)
-- Historical comparisons and trend analysis
+Usa tus herramientas para proporcionar:
+- Estadísticas detalladas de jugadores (goles, asistencias, valoración, etc.)
+- Métricas de rendimiento de equipos (victorias, derrotas, goles a favor/en contra, etc.)
+- Comparaciones históricas y análisis de tendencias
 
-Present statistics in a clear, structured format. Add context to help the user
-understand what the numbers mean (e.g. how a stat compares to league average).
+Presenta las estadísticas en un formato claro y estructurado. Añade contexto para ayudar
+al usuario a entender qué significan los números (p.ej. cómo se compara una estadística
+con la media de la liga).
+Responde siempre en español.
 """
 
 # ---------------------------------------------------------------------------
-# Agent factories
+# Factorías de agentes
 # ---------------------------------------------------------------------------
 
 
 def create_results_agent(client: FoundryChatClient) -> Agent:
-    """Creates the results agent with live score and standings tools."""
+    """Crea el agente de resultados con herramientas de marcadores y clasificaciones."""
     return Agent(
         client=client,
-        name="SportsResultsAgent",
+        name="AgenteResultadosDeportivos",
         instructions=RESULTS_INSTRUCTIONS,
         tools=[get_live_scores, get_football_standings, get_f1_standings],
     )
 
 
 def create_stats_agent(client: FoundryChatClient) -> Agent:
-    """Creates the stats agent with player and team stat tools."""
+    """Crea el agente de estadísticas con herramientas de jugadores y equipos."""
     return Agent(
         client=client,
-        name="SportsStatsAgent",
+        name="AgenteEstadisticasDeportivas",
         instructions=STATS_INSTRUCTIONS,
         tools=[get_player_stats, get_team_stats],
     )
 
 
 # ---------------------------------------------------------------------------
-# AgentCard factories
+# Factorías de AgentCard
 # ---------------------------------------------------------------------------
 
 _CAPABILITIES = AgentCapabilities(streaming=True, push_notifications=False)
 
 
 def get_results_agent_card(url: str) -> AgentCard:
-    """Returns the A2A AgentCard for the results agent."""
+    """Devuelve el AgentCard A2A para el agente de resultados."""
     return AgentCard(
-        name="SportsResultsAgent",
-        description="Provides live scores, recent results, and standings for football, F1, basketball, and tennis.",
+        name="AgenteResultadosDeportivos",
+        description="Proporciona marcadores en vivo, resultados recientes y clasificaciones de fútbol, F1, baloncesto y tenis.",
         version="1.0.0",
         default_input_modes=["text"],
         default_output_modes=["text"],
@@ -88,28 +90,28 @@ def get_results_agent_card(url: str) -> AgentCard:
         supported_interfaces=[AgentInterface(url=url, protocol_binding="JSONRPC")],
         skills=[
             AgentSkill(
-                id="live_scores",
-                name="LiveScores",
-                description="Returns live scores and recent results for a sport or competition.",
-                tags=["sports", "scores", "results", "live"],
-                examples=["What are today's football scores?", "Show me F1 race results"],
+                id="marcadores_en_vivo",
+                name="MarcadoresEnVivo",
+                description="Devuelve marcadores en vivo y resultados recientes de un deporte o competición.",
+                tags=["deportes", "marcadores", "resultados", "directo"],
+                examples=["¿Cuáles son los marcadores de fútbol hoy?", "Resultados de la carrera de F1"],
             ),
             AgentSkill(
-                id="standings",
-                name="Standings",
-                description="Returns current league or championship standings.",
-                tags=["sports", "standings", "table", "ranking"],
-                examples=["Show me the Premier League table", "F1 driver standings 2025"],
+                id="clasificaciones",
+                name="Clasificaciones",
+                description="Devuelve la clasificación actual de una liga o campeonato.",
+                tags=["deportes", "clasificación", "tabla", "ranking"],
+                examples=["Muéstrame la tabla de La Liga", "Clasificación de pilotos de F1"],
             ),
         ],
     )
 
 
 def get_stats_agent_card(url: str) -> AgentCard:
-    """Returns the A2A AgentCard for the stats agent."""
+    """Devuelve el AgentCard A2A para el agente de estadísticas."""
     return AgentCard(
-        name="SportsStatsAgent",
-        description="Provides detailed player and team statistics for major sports.",
+        name="AgenteEstadisticasDeportivas",
+        description="Proporciona estadísticas detalladas de jugadores y equipos para los principales deportes.",
         version="1.0.0",
         default_input_modes=["text"],
         default_output_modes=["text"],
@@ -117,25 +119,25 @@ def get_stats_agent_card(url: str) -> AgentCard:
         supported_interfaces=[AgentInterface(url=url, protocol_binding="JSONRPC")],
         skills=[
             AgentSkill(
-                id="player_stats",
-                name="PlayerStats",
-                description="Returns detailed statistics for a specific player.",
-                tags=["sports", "stats", "player", "performance"],
-                examples=["Stats for Vinicius Jr this season", "Verstappen's 2025 stats"],
+                id="estadisticas_jugador",
+                name="EstadisticasJugador",
+                description="Devuelve estadísticas detalladas de un jugador concreto.",
+                tags=["deportes", "estadísticas", "jugador", "rendimiento"],
+                examples=["Estadísticas de Vinicius Jr esta temporada", "Stats de Verstappen en 2025"],
             ),
             AgentSkill(
-                id="team_stats",
-                name="TeamStats",
-                description="Returns performance metrics and statistics for a team.",
-                tags=["sports", "stats", "team", "metrics"],
-                examples=["Real Madrid stats this season", "Barcelona attack statistics"],
+                id="estadisticas_equipo",
+                name="EstadisticasEquipo",
+                description="Devuelve métricas de rendimiento y estadísticas de un equipo.",
+                tags=["deportes", "estadísticas", "equipo", "métricas"],
+                examples=["Estadísticas del Real Madrid esta temporada", "Estadísticas de ataque del Barcelona"],
             ),
         ],
     )
 
 
 # ---------------------------------------------------------------------------
-# Lookup helpers
+# Diccionarios de búsqueda
 # ---------------------------------------------------------------------------
 
 AGENT_FACTORIES = {

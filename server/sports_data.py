@@ -1,16 +1,15 @@
-# Copyright (c) Microsoft. All rights reserved.
-# Mock sports data and tool functions for the Sports A2A server
+# Datos deportivos mock y funciones de herramientas para el servidor A2A de deportes
 
 """
-Sports data tools used by the A2A agents.
-Returns mock data to simulate a real sports API (e.g. API-Football, Ergast, ESPN).
-In production, replace these stubs with real HTTP calls to your data provider.
+Herramientas de datos deportivos usadas por los agentes A2A.
+Devuelve datos simulados para imitar una API deportiva real (p.ej. API-Football, Ergast, ESPN).
+En producción, sustituye estas funciones por llamadas HTTP reales a tu proveedor de datos.
 """
 
 from __future__ import annotations
 
 # ---------------------------------------------------------------------------
-# Mock data
+# Datos mock
 # ---------------------------------------------------------------------------
 
 _LIVE_SCORES = {
@@ -108,36 +107,36 @@ _TEAM_STATS = {
 }
 
 # ---------------------------------------------------------------------------
-# Tool functions
+# Funciones de herramientas (tools)
 # ---------------------------------------------------------------------------
 
 
 def get_live_scores(sport: str) -> dict:
     """
-    Returns live scores and recent results for a given sport.
+    Devuelve marcadores en vivo y resultados recientes para un deporte dado.
 
     Args:
-        sport: One of 'football', 'f1', 'basketball', or 'tennis'.
+        sport: Uno de 'football', 'f1', 'basketball' o 'tennis'.
 
     Returns:
-        A dict with 'sport' and 'matches' keys containing current scores.
+        Diccionario con las claves 'sport' y 'matches' con los marcadores actuales.
     """
     sport = sport.lower().strip()
     data = _LIVE_SCORES.get(sport, [])
     if not data:
-        return {"sport": sport, "matches": [], "message": f"No live data found for '{sport}'."}
+        return {"sport": sport, "matches": [], "message": f"No se encontraron datos en vivo para '{sport}'."}
     return {"sport": sport, "matches": data}
 
 
 def get_football_standings(league: str) -> dict:
     """
-    Returns the current standings table for a football league.
+    Devuelve la clasificación actual de una liga de fútbol.
 
     Args:
-        league: League identifier. Supported values: 'la_liga', 'premier_league'.
+        league: Identificador de la liga. Valores soportados: 'la_liga', 'premier_league'.
 
     Returns:
-        A dict with 'league' and 'table' keys containing the standings.
+        Diccionario con las claves 'league' y 'table' con la clasificación.
     """
     league_key = league.lower().replace(" ", "_").replace("-", "_")
     table = _FOOTBALL_STANDINGS.get(league_key)
@@ -146,20 +145,20 @@ def get_football_standings(league: str) -> dict:
         return {
             "league": league,
             "table": [],
-            "message": f"No standings found for '{league}'. Available: {available}",
+            "message": f"No se encontró clasificación para '{league}'. Disponibles: {available}",
         }
     return {"league": league_key, "table": table}
 
 
 def get_f1_standings(category: str = "drivers") -> dict:
     """
-    Returns the current Formula 1 championship standings.
+    Devuelve la clasificación actual del Campeonato del Mundo de Fórmula 1.
 
     Args:
-        category: 'drivers' for the driver championship, 'constructors' for the team championship.
+        category: 'drivers' para el campeonato de pilotos, 'constructors' para el de constructores.
 
     Returns:
-        A dict with 'category' and 'standings' keys.
+        Diccionario con las claves 'category' y 'standings'.
     """
     cat = category.lower().strip()
     standings = _F1_STANDINGS.get(cat)
@@ -167,43 +166,42 @@ def get_f1_standings(category: str = "drivers") -> dict:
         return {
             "category": cat,
             "standings": [],
-            "message": f"Invalid category '{cat}'. Use 'drivers' or 'constructors'.",
+            "message": f"Categoría '{cat}' no válida. Usa 'drivers' o 'constructors'.",
         }
     return {"category": cat, "standings": standings}
 
 
 def get_player_stats(player_name: str) -> dict:
     """
-    Returns detailed statistics for a specific player or driver.
+    Devuelve estadísticas detalladas de un jugador o piloto concreto.
 
     Args:
-        player_name: Full or partial player name (e.g. 'Vinicius Jr', 'Verstappen').
+        player_name: Nombre completo o parcial del jugador (p.ej. 'Vinicius Jr', 'Verstappen').
 
     Returns:
-        A dict containing the player's season statistics.
+        Diccionario con las estadísticas de temporada del jugador.
     """
     key = player_name.lower().strip()
-    # Partial match support
     for stored_key, stats in _PLAYER_STATS.items():
         if key in stored_key or stored_key in key:
             return {"found": True, "player": stats}
     available = [s["name"] for s in _PLAYER_STATS.values()]
     return {
         "found": False,
-        "message": f"No stats found for '{player_name}'.",
-        "available_players": available,
+        "message": f"No se encontraron estadísticas para '{player_name}'.",
+        "jugadores_disponibles": available,
     }
 
 
 def get_team_stats(team_name: str) -> dict:
     """
-    Returns performance metrics and statistics for a team.
+    Devuelve métricas de rendimiento y estadísticas de un equipo.
 
     Args:
-        team_name: Team name (e.g. 'Real Madrid', 'McLaren').
+        team_name: Nombre del equipo (p.ej. 'Real Madrid', 'McLaren').
 
     Returns:
-        A dict containing the team's season statistics.
+        Diccionario con las estadísticas de temporada del equipo.
     """
     key = team_name.lower().strip()
     for stored_key, stats in _TEAM_STATS.items():
@@ -212,6 +210,6 @@ def get_team_stats(team_name: str) -> dict:
     available = [s["name"] for s in _TEAM_STATS.values()]
     return {
         "found": False,
-        "message": f"No stats found for '{team_name}'.",
-        "available_teams": available,
+        "message": f"No se encontraron estadísticas para '{team_name}'.",
+        "equipos_disponibles": available,
     }

@@ -1,5 +1,4 @@
-# Copyright (c) Microsoft. All rights reserved.
-# Sports A2A Orchestrator — host agent that uses multiple sports agents as function tools
+# Orquestador A2A de deportes — host agent que usa múltiples agentes A2A como herramientas
 
 import asyncio
 import os
@@ -15,67 +14,68 @@ from dotenv import load_dotenv
 load_dotenv()
 
 """
-Sports A2A Orchestrator — wraps multiple A2A agents as tools for a host agent.
+Orquestador A2A de deportes — convierte múltiples agentes A2A en herramientas de un host agent.
 
-This is the more advanced client pattern: a local Foundry-backed agent receives
-the user's sports questions and decides which remote A2A agent (results / stats)
-to call, transparently composing the final answer.
+Este es el patrón de cliente avanzado: un agente local respaldado por Foundry recibe las
+preguntas deportivas del usuario y decide qué agente remoto A2A (results / stats) invocar,
+componiendo automáticamente la respuesta final.
 
-Prerequisites:
-  Terminal 1: uv run python server/a2a_server.py --agent-type results --port 5001
-  Terminal 2: uv run python server/a2a_server.py --agent-type stats   --port 5002
+Requisitos previos:
+  Terminal 1: python server/a2a_server.py --agent-type results --port 5001
+  Terminal 2: python server/a2a_server.py --agent-type stats   --port 5002
 
-Environment variables (in .env):
-  FOUNDRY_PROJECT_ENDPOINT  — Azure AI Foundry project endpoint
-  FOUNDRY_MODEL             — Model deployment name (e.g. gpt-4o-mini)
-  A2A_RESULTS_HOST          — Results agent URL (default: http://localhost:5001/)
-  A2A_STATS_HOST            — Stats agent URL   (default: http://localhost:5002/)
+Variables de entorno (en .env):
+  FOUNDRY_PROJECT_ENDPOINT  — Endpoint del proyecto Azure AI Foundry
+  FOUNDRY_MODEL             — Nombre del modelo desplegado (p.ej. gpt-4o-mini)
+  A2A_RESULTS_HOST          — URL del agente de resultados (por defecto: http://localhost:5001/)
+  A2A_STATS_HOST            — URL del agente de estadísticas (por defecto: http://localhost:5002/)
 
-Usage:
-  uv run python client/a2a_orchestrator.py
+Uso:
+  python client/a2a_orchestrator.py
 """
 
-ORCHESTRATOR_INSTRUCTIONS = """\
-You are a sports information assistant. You have access to two specialized agents:
-- A results agent: for live scores, match results, and league standings
-- A stats agent: for detailed player and team statistics
+INSTRUCCIONES_ORQUESTADOR = """\
+Eres un asistente de información deportiva. Tienes acceso a dos agentes especializados:
+- Agente de resultados: para marcadores en vivo, resultados de partidos y clasificaciones de ligas.
+- Agente de estadísticas: para estadísticas detalladas de jugadores y equipos.
 
-Route user queries to the appropriate agent. For complex questions, call both.
-Always provide clear, well-formatted answers with the most relevant data.
+Dirige las consultas del usuario al agente apropiado. Para preguntas complejas, llama a ambos.
+Proporciona siempre respuestas claras y bien formateadas con los datos más relevantes.
+Responde siempre en español.
 """
 
-# Demo queries that require different agents
-DEMO_QUERIES = [
-    "Who is leading the La Liga table and what are Vinicius Jr's stats this season?",
-    "Give me the F1 standings and Max Verstappen's 2025 stats.",
+# Consultas de demo que requieren agentes distintos
+CONSULTAS_DEMO = [
+    "¿Quién lidera La Liga y cuáles son las estadísticas de Vinicius Jr esta temporada?",
+    "Dame la clasificación de F1 y las estadísticas de Max Verstappen.",
 ]
 
 
-async def resolve_agent(http_client: httpx.AsyncClient, host_url: str, label: str) -> tuple:
-    """Resolves an A2A agent card and returns (agent_card, A2AAgent context)."""
+async def resolver_agente(http_client: httpx.AsyncClient, host_url: str, etiqueta: str):
+    """Resuelve el agent card de un agente A2A y devuelve el AgentCard."""
     resolver = A2ACardResolver(httpx_client=http_client, base_url=host_url)
     card = await resolver.get_agent_card()
-    print(f"  Resolved {label}: {card.name} ({len(card.skills)} skill(s))")
+    print(f"  Resuelto {etiqueta}: {card.name} ({len(card.skills)} skill(s))")
     return card
 
 
 async def main() -> None:
-    """Runs the orchestrator host agent against multiple sports A2A agents."""
+    """Ejecuta el host agent orquestador contra múltiples agentes A2A de deportes."""
     project_endpoint = os.getenv("FOUNDRY_PROJECT_ENDPOINT")
     model = os.getenv("FOUNDRY_MODEL")
     results_host = os.getenv("A2A_RESULTS_HOST", "http://localhost:5001/")
     stats_host = os.getenv("A2A_STATS_HOST", "http://localhost:5002/")
 
     if not project_endpoint or not model:
-        raise ValueError("FOUNDRY_PROJECT_ENDPOINT and FOUNDRY_MODEL must be set in .env")
+        raise ValueError("FOUNDRY_PROJECT_ENDPOINT y FOUNDRY_MODEL deben estar configurados en .env")
 
-    print("Resolving remote A2A agents...")
+    print("Resolviendo agentes A2A remotos...")
     async with httpx.AsyncClient(timeout=60.0) as http_client:
-        results_card = await resolve_agent(http_client, results_host, "Results agent")
-        stats_card = await resolve_agent(http_client, stats_host, "Stats agent")
+        results_card = await resolver_agente(http_client, results_host, "Agente de resultados")
+        stats_card = await resolver_agente(http_client, stats_host, "Agente de estadísticas")
     print()
 
-    # Create the Foundry host agent with A2A skill tools
+    # Crear el host agent de Foundry con las skills A2A como herramientas
     credential = AzureCliCredential()
     client = FoundryChatClient(
         project_endpoint=project_endpoint,
@@ -97,8 +97,8 @@ async def main() -> None:
             url=stats_host,
         ) as stats_agent,
     ):
-        # Convert each skill into a function tool
-        def make_tools(a2a_agent, card):
+        # Convertir cada skill en una function tool
+        def crear_tools(a2a_agent, card):
             return [
                 a2a_agent.as_tool(
                     name=re.sub(r"[^0-9A-Za-z]+", "_", skill.name),
@@ -107,25 +107,25 @@ async def main() -> None:
                 for skill in card.skills
             ]
 
-        all_tools = make_tools(results_agent, results_card) + make_tools(stats_agent, stats_card)
+        todas_las_tools = crear_tools(results_agent, results_card) + crear_tools(stats_agent, stats_card)
 
         host_agent = client.as_agent(
-            name="SportsOrchestrator",
-            instructions=ORCHESTRATOR_INSTRUCTIONS,
-            tools=all_tools,
+            name="OrquestadorDeportivo",
+            instructions=INSTRUCCIONES_ORQUESTADOR,
+            tools=todas_las_tools,
         )
 
-        print(f"Host agent ready with {len(all_tools)} tools:")
-        for tool in all_tools:
+        print(f"Host agent listo con {len(todas_las_tools)} herramientas:")
+        for tool in todas_las_tools:
             print(f"  - {tool.name}")
         print()
 
-        # Run the demo queries
-        for query in DEMO_QUERIES:
+        # Ejecutar las consultas de demo
+        for consulta in CONSULTAS_DEMO:
             print("=" * 60)
-            print(f"User  : {query}")
-            response = await host_agent.run(query)
-            print(f"Agent : {response}\n")
+            print(f"Usuario : {consulta}")
+            respuesta = await host_agent.run(consulta)
+            print(f"Agente  : {respuesta}\n")
 
 
 if __name__ == "__main__":

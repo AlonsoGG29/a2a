@@ -1,5 +1,4 @@
-# Copyright (c) Microsoft. All rights reserved.
-# Sports A2A Server — hosts sport agents as A2A endpoints
+# Servidor A2A de deportes — expone agentes deportivos como endpoints A2A
 
 import argparse
 import os
@@ -19,40 +18,40 @@ from starlette.applications import Starlette
 load_dotenv()
 
 """
-Sports A2A Server — Host sports agents as A2A endpoints using Azure AI Foundry
+Servidor A2A de deportes — expone agentes deportivos como endpoints A2A usando Azure AI Foundry.
 
-Two agent types available:
-  - results   — Answers questions about recent sports results and standings.
-  - stats     — Provides detailed athlete/team statistics.
+Tipos de agente disponibles:
+  - results   — Responde preguntas sobre resultados y clasificaciones.
+  - stats     — Proporciona estadísticas detalladas de jugadores y equipos.
 
-Usage:
-  uv run python a2a_server.py --agent-type results --port 5001
-  uv run python a2a_server.py --agent-type stats   --port 5002
+Uso:
+  python a2a_server.py --agent-type results --port 5001
+  python a2a_server.py --agent-type stats   --port 5002
 
-Environment variables (in .env):
-  FOUNDRY_PROJECT_ENDPOINT  — Your Azure AI Foundry project endpoint
-  FOUNDRY_MODEL             — Model deployment name (e.g. gpt-4o-mini)
+Variables de entorno (en .env):
+  FOUNDRY_PROJECT_ENDPOINT  — Endpoint del proyecto Azure AI Foundry
+  FOUNDRY_MODEL             — Nombre del modelo desplegado (p.ej. gpt-4o-mini)
 """
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Sports A2A Agent Server")
+    parser = argparse.ArgumentParser(description="Servidor A2A de deportes")
     parser.add_argument(
         "--agent-type",
         choices=list(AGENT_FACTORIES.keys()),
         default="results",
-        help="Type of sports agent to host (default: results)",
+        help="Tipo de agente deportivo a exponer (por defecto: results)",
     )
     parser.add_argument(
         "--host",
         default="localhost",
-        help="Host to bind to (default: localhost)",
+        help="Host donde escucha el servidor (por defecto: localhost)",
     )
     parser.add_argument(
         "--port",
         type=int,
         default=5001,
-        help="Port to listen on (default: 5001)",
+        help="Puerto donde escucha el servidor (por defecto: 5001)",
     )
     return parser.parse_args()
 
@@ -60,18 +59,18 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    # Validate required environment variables
+    # Validar variables de entorno obligatorias
     project_endpoint = os.getenv("FOUNDRY_PROJECT_ENDPOINT")
     model = os.getenv("FOUNDRY_MODEL")
 
     if not project_endpoint:
-        print("Error: FOUNDRY_PROJECT_ENDPOINT environment variable is not set.")
+        print("Error: la variable de entorno FOUNDRY_PROJECT_ENDPOINT no está configurada.")
         sys.exit(1)
     if not model:
-        print("Error: FOUNDRY_MODEL environment variable is not set.")
+        print("Error: la variable de entorno FOUNDRY_MODEL no está configurada.")
         sys.exit(1)
 
-    # Create the Foundry LLM client with Azure CLI credentials
+    # Crear el cliente Foundry con credenciales de Azure CLI
     credential = AzureCliCredential()
     client = FoundryChatClient(
         project_endpoint=project_endpoint,
@@ -79,11 +78,11 @@ def main() -> None:
         credential=credential,
     )
 
-    # Instantiate the requested sports agent
+    # Instanciar el agente deportivo solicitado
     agent_factory = AGENT_FACTORIES[args.agent_type]
     agent = agent_factory(client)
 
-    # Build A2A server components
+    # Construir los componentes del servidor A2A
     url = f"http://{args.host}:{args.port}/"
     agent_card = AGENT_CARD_FACTORIES[args.agent_type](url)
     executor = A2AExecutor(agent, stream=True)
@@ -101,10 +100,10 @@ def main() -> None:
         ]
     )
 
-    print(f"Starting Sports A2A server: {agent_card.name}")
-    print(f"  Agent type : {args.agent_type}")
-    print(f"  Listening  : {url}")
-    print(f"  Agent card : {url}.well-known/agent.json")
+    print(f"Iniciando servidor A2A de deportes: {agent_card.name}")
+    print(f"  Tipo de agente : {args.agent_type}")
+    print(f"  Escuchando en  : {url}")
+    print(f"  Agent card     : {url}.well-known/agent.json")
     print()
 
     uvicorn.run(app, host=args.host, port=args.port)
